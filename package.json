@@ -1,0 +1,30 @@
+{
+  "name": "fastify-vite-svelte-template",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PierBover/fastify-vite-svelte-template.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/PierBover/fastify-vite-svelte-template/issues"
+  },
+  "homepage": "https://github.com/PierBover/fastify-vite-svelte-template#readme",
+  "dependencies": {
+    "@fastify/middie": "^8.1.0",
+    "fastify": "^4.14.1"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^2.0.3",
+    "nodemon": "^2.0.21",
+    "vite": "^4.2.0"
+  }
+}
