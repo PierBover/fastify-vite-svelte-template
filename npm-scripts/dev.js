@@ -31,3 +31,7 @@ chokidarWatcher
 	const filename = path.basename(renamedPath);
 	generateClientEntryScript(filename);
 });
+
+process.once('SIGINT', async () => {
+	await chokidarWatcher.close();
+});
