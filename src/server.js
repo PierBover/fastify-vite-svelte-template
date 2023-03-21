@@ -1,8 +1,8 @@
 import Fastify from 'fastify';
 import {createServer as createViteServer} from 'vite';
-import fs from 'fs';
-// we need middie to enable middlware support to connect Fastify with Vite
+// we need middie to enable middlware support and connect Fastify with Vite during dev
 import middie from '@fastify/middie';
+import {renderSsr} from './render-ssr.js';
 
 const fastify = Fastify({
 	logger: true
@@ -10,7 +10,7 @@ const fastify = Fastify({
 
 await fastify.register(middie);
 
-const vite = await createViteServer({
+export const vite = await createViteServer({
 	server: {middlewareMode: true},
 	appType: 'custom'
 });
@@ -18,7 +18,19 @@ const vite = await createViteServer({
 fastify.use(vite.middlewares);
 
 fastify.get('/', async function (request, reply) {
-	const html = await renderVite();
+	const html = await renderSsr('Home');
+	reply.header('content-type', 'text/html');
+	reply.send(html);
+});
+
+fastify.get('/about', async function (request, reply) {
+	const html = await renderSsr('About');
+	reply.header('content-type', 'text/html');
+	reply.send(html);
+});
+
+fastify.get('/another', async function (request, reply) {
+	const html = await renderSsr('Another');
 	reply.header('content-type', 'text/html');
 	reply.send(html);
 });
@@ -29,13 +41,3 @@ fastify.listen({ port: 3000 }, function (err, address) {
 		process.exit(1)
 	}
 });
-
-async function renderVite () {
-	let template = fs.readFileSync('src/client/index.html','utf-8');
-	template = await vite.transformIndexHtml('/', template);
-	const module = await vite.ssrLoadModule('src/client/Test.svelte');
-	const {html, head, css} = module.default.render();
-	const styles = `<style>${css.code}</style>`
-	const finalHtml = template.replace(`<!--SVELTE-SSR-->`, html).replace(`<!--SVELTE-HEAD-->`, head).replace(`<!--SVELTE-CSS-->`, styles);
-	return finalHtml;
-}

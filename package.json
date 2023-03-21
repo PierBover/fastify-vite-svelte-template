@@ -5,7 +5,12 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "nodemon"
+    "dev": "concurrently 'npm:generate-dev' 'nodemon'",
+    "generate-dev": "node npm-scripts/dev.js",
+    "generate-build": "node npm-scripts/build.js",
+    "build:client": "vite build --outDir dist/client --ssrManifest",
+    "build:server": "vite build --outDir dist/server --ssr src/render-svelte.js",
+    "build": "npm run build:client && npm run build:server"
   },
   "repository": {
     "type": "git",
@@ -24,7 +29,9 @@
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^2.0.3",
+    "concurrently": "^7.6.0",
     "nodemon": "^2.0.21",
+    "rimraf": "^4.4.0",
     "vite": "^4.2.0"
   }
 }
