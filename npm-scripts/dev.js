@@ -3,6 +3,10 @@ import path from 'path';
 import rimraf from 'rimraf';
 import chokidar from 'chokidar';
 
+// delete and create the folder again
+if (fs.existsSync('src/pages/client-entries')) rimraf.sync('src/pages/client-entries');
+fs.mkdirSync('src/pages/client-entries');
+
 import {
 	generateAllClientEntryScripts,
 	generateClientEntryScript
@@ -24,7 +28,7 @@ chokidarWatcher
 })
 .on('unlink', (deletedPath) => {
 	const filename = path.basename(deletedPath).replace('.svelte','.js');
-	fs.unlinkSync('src/.generated/entry-scripts/' + filename);
+	fs.unlinkSync('src/pages/client-entries/' + filename);
 	console.log('Deleted ', deletedPath);
 })
 .on('rename', (renamedPath, other) => {

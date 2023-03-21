@@ -5,12 +5,11 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "concurrently 'npm:generate-dev' 'nodemon'",
-    "generate-dev": "node npm-scripts/dev.js",
-    "generate-build": "node npm-scripts/build.js",
-    "build:client": "vite build --outDir dist/client --ssrManifest",
-    "build:server": "vite build --outDir dist/server --ssr src/render-svelte.js",
-    "build": "npm run build:client && npm run build:server"
+    "dev": "concurrently 'node npm-scripts/dev.js' 'nodemon'",
+    "build:client": "vite build --outDir src/vite/client --ssrManifest",
+    "build:server": "vite build --outDir src/vite/server --ssr src/render-svelte.js",
+    "build": "node npm-scripts/build.js && npm run build:client && npm run build:server",
+    "start": "npm run build && node src/server.js"
   },
   "repository": {
     "type": "git",
@@ -25,11 +24,13 @@
   "homepage": "https://github.com/PierBover/fastify-vite-svelte-template#readme",
   "dependencies": {
     "@fastify/middie": "^8.1.0",
+    "@fastify/static": "^6.9.0",
     "fastify": "^4.14.1"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^2.0.3",
     "concurrently": "^7.6.0",
+    "glob": "^9.3.1",
     "nodemon": "^2.0.21",
     "rimraf": "^4.4.0",
     "vite": "^4.2.0"
