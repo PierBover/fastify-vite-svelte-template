@@ -5,10 +5,10 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "dev": "concurrently 'node npm-scripts/dev.js' 'nodemon'",
+    "dev": "nodemon",
     "build:client": "vite build --outDir src/vite/client --ssrManifest",
     "build:server": "vite build --outDir src/vite/server --ssr src/render-svelte.js",
-    "build": "node npm-scripts/build.js && npm run build:client && npm run build:server",
+    "build": "npm run build:client && npm run build:server",
     "start": "npm run build && node src/server.js"
   },
   "repository": {

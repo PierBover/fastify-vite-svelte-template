@@ -39,7 +39,7 @@ function getPageTemplateDev (filename) {
 		</head>
 		<body>
 			<div id="svelte-app"><!--SVELTE-SSR--></div>
-			<script type="module" src="/src/pages/client-entries/${filename}"></script>
+			<script type="module" src="VIRTUAL_ENTRY/${filename}"></script>
 		</body>
 		</html>
 	`;
