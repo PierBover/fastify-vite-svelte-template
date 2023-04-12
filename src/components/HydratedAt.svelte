@@ -4,4 +4,6 @@
 
 {#if isClient}
     <p>Hydrated at: {Date.now()}</p>
+{:else}
+    <p>SSR</p>
 {/if}

@@ -21,7 +21,7 @@ export async function renderSsr (filename) {
 	} else {
 		let template = getPageTemplateProd(filename);
 		const {renderSvelte} = await import('./vite/server/render-svelte.js');
-		return await renderSvelte(template, filename);
+		return await renderSvelte(template, filename, true);
 	}
 }
 
@@ -29,7 +29,6 @@ function getPageTemplateDev (filename) {
 
 	filename.replace('.svelte','.js');
 
-	// the path of script file must be in relation to the Vite root
 	return `
 		<!DOCTYPE html>
 		<html lang="en">
@@ -39,7 +38,7 @@ function getPageTemplateDev (filename) {
 		</head>
 		<body>
 			<div id="svelte-app"><!--SVELTE-SSR--></div>
-			<script type="module" src="VIRTUAL_ENTRY/${filename}"></script>
+			<!--ISLANDS-CLIENT-ENTRY-POINTS-->
 		</body>
 		</html>
 	`;
@@ -61,7 +60,7 @@ function getPageTemplateProd (filename) {
 		</head>
 		<body>
 			<div id="svelte-app"><!--SVELTE-SSR--></div>
-			<script type="module" src="/${js}"></script>
+			<!--ISLANDS-CLIENT-ENTRY-POINTS-->
 		</body>
 		</html>
 	`;

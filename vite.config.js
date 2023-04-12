@@ -25,18 +25,31 @@ function generateVirtualEntryPoints () {
 
 	function generateEntryScript (id) {
 
+		console.log(id);
+
 		const split = id.split('/');
-		const filename = split[split.length - 1].replace('.js', '');
+		const filename = split[split.length - 1];
 		const componentFile = filename + '.svelte';
 
-		return `
-			import PageComponent from '/src/pages/${componentFile}';
-			// const pageData = JSON.parse(document.getElementById('hydration-data-json').text);
+		console.log(componentFile);
 
-			new PageComponent({
-				target: document.getElementById('svelte-app'),
-				hydrate: true,
-				props: {}
+		return `
+			import PageComponent from '/src/islands/${componentFile}';
+
+			const islandElements = document.querySelectorAll('.island-boi[data-component-name=${filename}]');
+
+			islandElements.forEach((element) => {
+				const componentName = element.getAttribute('data-component-name');
+				const data = JSON.parse(element.getAttribute('data-json'));
+				const islandId = element.getAttribute('data-island-id');
+
+				console.log('hydrating island:', componentName, islandId);
+
+				new PageComponent({
+					target: element,
+					hydrate: true,
+					props: data
+				});
 			});
 		`;
 	}
