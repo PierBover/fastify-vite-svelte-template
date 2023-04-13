@@ -3,7 +3,7 @@
 	export let title;
 </script>
 
-<h2>Mallorca: {title}</h2>
+<h2>{title}</h2>
 <slot></slot>
 
 <HydratedAt/>

@@ -29,10 +29,14 @@ function getPageTemplateDev (filename) {
 
 	filename.replace('.svelte','.js');
 
+	// the URLs of the styles must be relative to the root of the repo
+	// where Vite was launched
+
 	return `
 		<!DOCTYPE html>
 		<html lang="en">
 		<head>
+			<link rel="stylesheet" href="src/index.scss">
 			<!--SVELTE-CSS-->
 			<!--SVELTE-HEAD-->
 		</head>

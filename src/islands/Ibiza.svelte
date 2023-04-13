@@ -1,9 +1,17 @@
 <script>
 	import HydratedAt from "../components/HydratedAt.svelte";
-	export let title;
+	const isServer = import.meta.env.SSR;
 </script>
 
-<h2>Ibiza: {title}</h2>
-<slot></slot>
+<h2>
+	Island
+
+	{#if isServer}
+		rendered on the server
+	{:else}
+		rendered on the client
+	{/if}
+
+</h2>
 
 <HydratedAt/>

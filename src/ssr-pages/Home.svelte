@@ -13,12 +13,13 @@
 
 <Menu/>
 
-<!-- you can't send anything to the island other than through the data prop  -->
-<!-- everything in the data prop must be JSON serializable -->
-<!-- no slots! -->
-<Island component={Mallorca} componentName="Mallorca" data={hydrationData}/>
-<Island component={Ibiza} componentName="Ibiza" data={hydrationData}/>
-<Island component={Mallorca} componentName="Mallorca" data={hydrationData}/>
+<Island component={Mallorca} data={hydrationData}/>
+<!-- SSR only -->
+<Ibiza/>
+<!-- SRR + hydration -->
+<Island component={Ibiza}/>
+<!-- Client only -->
+<Island component={Ibiza} clientOnly/>
 
 <style>
 	h1 {
