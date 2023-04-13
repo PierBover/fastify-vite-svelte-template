@@ -34,7 +34,7 @@ The `data` prop is optional and will only accept JSON-serializable data. Anythin
 
 #### Make an island client-side only
 
-You configure an island to skip SSR and be only hydrated in the client.
+You can configure an island to skip SSR and be only hydrated in the client.
 
 ```svelte
 <Island component={MyComponent} clientOnly/>
@@ -43,5 +43,5 @@ You configure an island to skip SSR and be only hydrated in the client.
 #### Limitations of islands
 
 * Islands components have to be located in the `/src/islands` directory. You can create subdirectories eg: `/src/islands/home/SomeWidget.svelte`. Islands can import components from other other folders.
-* As usual with hydration, islands you can only be hydrated with JSON-serializable data.
+* As usual with hydration, islands can only be hydrated with JSON-serializable data.
 * You can't use slots to add children to islands.
