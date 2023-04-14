@@ -42,7 +42,7 @@ fastify.get('/', async function (request, reply) {
 });
 
 fastify.get('/about', async function (request, reply) {
-	const html = await renderSsr('About');
+	const html = await renderSsr('nested/About');
 	reply.header('content-type', 'text/html');
 	reply.send(html);
 });

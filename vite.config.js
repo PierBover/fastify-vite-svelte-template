@@ -1,45 +1,22 @@
 import {svelte} from '@sveltejs/vite-plugin-svelte';
 import fs from 'fs';
+import {globSync} from 'glob';
+
+// this pre-processor adds some stuff to the Island component for hydration
 
 const partialHydrationPreProcess = {
 	markup: async ({content, filename}) => {
-
-		//if (filename.includes('src/islands/')) {
-		//	console.log(filename);
-		//	console.log(content);
-		//}
-
 		if (content.includes('<Island')) {
-			//console.log(filename);
-			//console.log(content);
-
-			//const matches = content.matchAll(/<Island.+(component=\{([a-zA-Z]+)\})/gim);
-
-			//for (const match of matches) {
-			//	console.log('match', match);
-			//}
-
+			// add the name of the component file so that when hydrating we know what class to use
+			// componentName="MyComponent"
 			content = content.replace(/(<Island.+)component=\{([a-zA-Z]+)\}/gim, '$1component={$2} componentName="$2"');
-
-			//console.log(content);
 		}
-
-		//console.log(content);
-
-		//const matches = content.matchAll(/<([a-zA-Z]+)\s+interactive:data={(.*)}/gim);
-
-		//for (const match of matches) {
-		//	console.log('match', match);
-		//	const componentName = match[1];
-		//	const dataFunction = match[2];
-
-		//	const replacement = `<div class="needs-hydration" data-component="${componentName}" data-data={JSON.stringify(${dataFunction})}`;
-		//	content = content.replace(match[0], replacement);
-		//}
-
 		return {code: content};
 	}
 }
+
+
+// Vite config
 
 export default {
 	plugins: [
@@ -56,13 +33,15 @@ export default {
 	}
 }
 
+// Vite plugin to generate virtual entry points for hydration
+
 function generateVirtualEntryPoints () {
 
 	let config;
 
 	function generateEntryScript (id) {
 
-		//console.log(id);
+		console.log(id);
 
 		const split = id.split('/');
 		const filename = split[split.length - 1];
@@ -71,23 +50,23 @@ function generateVirtualEntryPoints () {
 		//console.log(componentFile);
 
 		return `
-		import PageComponent from '/src/islands/${componentFile}';
+			import IslandComponent from '/src/islands/${componentFile}';
 
-		const islandElements = document.querySelectorAll('.island-boi[data-component-name=${filename}]');
+			const islandElements = document.querySelectorAll('.island-boi[data-component-name=${filename}]');
 
-		islandElements.forEach((element) => {
-			const componentName = element.getAttribute('data-component-name');
-			const data = JSON.parse(element.getAttribute('data-json'));
-			const islandId = element.getAttribute('data-island-id');
+			islandElements.forEach((element) => {
+				const componentName = element.getAttribute('data-component-name');
+				const data = JSON.parse(element.getAttribute('data-json'));
+				const islandId = element.getAttribute('data-island-id');
 
-			console.log('hydrating island:', componentName, islandId);
+				console.log('hydrating island:', componentName, islandId);
 
-			new PageComponent({
-				target: element,
-				hydrate: true,
-				props: data
+				new IslandComponent({
+					target: element,
+					hydrate: true,
+					props: data
+				});
 			});
-		});
 		`;
 	}
 
@@ -97,15 +76,25 @@ function generateVirtualEntryPoints () {
 			config = resolvedConfig;
 
 			if (config.command === 'build') {
-				// find the .svelte components in src/pages
-				const pagesFilenames = fs.readdirSync('src/pages').filter((filename) => filename.includes('.svelte'));
 
-				// for every .svelte page component return the path of a virtual entry point
-				resolvedConfig.build.rollupOptions.input = pagesFilenames.map((pageFilename) => {
-					const jsFilename = pageFilename.replace('.svelte', '.js');
-					console.log(jsFilename);
+				// Islands
+				// find the .svelte components in src/islands
+				const islandsFilenames = globSync('src/islands/*.svelte').map((filePath) => filePath.replace('src/islands/', ''));
+
+				// for every .svelte island component return the path of a virtual entry point
+				resolvedConfig.build.rollupOptions.input = islandsFilenames.map((pageFilename) => {
+					const jsFilename = pageFilename.replace('.svelte', '');
 					return `VIRTUAL_ENTRY/${jsFilename}`;
 				});
+
+				// Pages
+				// we need to also build the SSR pages so that Vite generates the .css files
+				// for the <style> tags in the components
+				const pagesFilenames =  globSync('src/ssr-pages/**/*.svelte');
+				resolvedConfig.build.rollupOptions.input.push(...pagesFilenames);
+
+				// finally add the index.scss
+				resolvedConfig.build.rollupOptions.input.push('src/index.scss');
 			}
 		},
 		load (id) {

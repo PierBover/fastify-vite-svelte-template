@@ -7,3 +7,9 @@
 <slot></slot>
 
 <HydratedAt/>
+
+<style>
+	h2 {
+		color: blueviolet;
+	}
+</style>

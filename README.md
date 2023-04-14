@@ -1,6 +1,6 @@
 # Fastify + Vite + Svelte with SSR + partial hydration per page
 
-I'm still working on this. Dev mode works fine but still haven't completely solved building.
+I'm still working on this.
 
 This is a quick (and dirty) proof of concept on how to hook up the different parts to make this work.
 
@@ -15,6 +15,24 @@ This setup solves both using styles from `.svelte` files and global SASS/SCSS st
 ## SSR
 
 The files in the `/ssr-pages` directory will only be rendered in the server. If you want client-side interactivity, add an interactive island. Islands will be first rendered in the server, and then hydrated in the client.
+
+Check the `server.js` file to see how to render a Svelte module. In your Fastify code first import the `renderSsr()` function:
+
+```js
+import {renderSsr} from './render-ssr.js';
+```
+
+Then in your route use it like this:
+```js
+const html = await renderSsr('MyComponent');
+```
+
+`MyComponent` would be the `ssr-pages/MyComponent.svelte` file.
+
+You can use nested folders in the `ssr-pages` directory and then reference the component like this:
+```js
+const html = await renderSsr('nested/folder/Component');
+```
 
 ## Interactive islands (partial hydration)
 
@@ -52,6 +70,7 @@ You can configure an island to skip SSR and be only hydrated in the client.
 
 ### Limitations of islands
 
-* Islands components have to be located in the `/src/islands` directory. You can create subdirectories eg: `/src/islands/home/SomeWidget.svelte`. Islands can import components from other other folders.
+* Islands components have to be located in the `/src/islands` directory.
+* Unfortunately you **cannot** create subdirectories in the `/src/islands` directory since all the island filenames have to unique for this to work.
 * As usual with hydration, islands can only be hydrated with JSON-serializable data.
 * You can't use slots to add children to islands.
