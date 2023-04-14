@@ -4,13 +4,13 @@ I'm still working on this.
 
 This is a quick (and dirty) proof of concept on how to hook up the different parts to make this work.
 
-This works klike an MPA. Every page first renders HTML via SSR and then only the interactive islands for that page are hydrated.
+This works like an MPA. Every page first renders HTML via SSR and then only the interactive islands for that page are hydrated.
 
 There's a Vite plugin in `vite.config.js` that generates the virtual entry points on the fly during dev and build. Also a lightweight Svelte preprocessor that does a bit of magic for the `Island` wrapper component to work.
 
 ## Styles
 
-This setup solves both using styles from `.svelte` files and global SASS/SCSS styles.
+This setup solves both using styles from the `.svelte` files and global SASS/SCSS styles.
 
 ## SSR
 
