@@ -46,13 +46,13 @@ The `component` prop is required. It's the Svelte component that will be used to
 
 ### Add data to the island
 
-You can add data to island component using the optional `data` prop is optional. As usual with hydration, this only accepts JSON-serializable data. Anything else will throw an error.
+You can add data to an island using the optional `data` prop. As usual with hydration, this only accepts JSON-serializable data. Anything else will throw an error.
 
 ```svelte
 <Island component={MyComponent} data={someDataObject}/>
 ```
 
-The data needs to be encapsulated into an object, as the key/values of the object will be passed as props to the hydrated component:
+The data needs to be encapsulated into an object. The key/values of the object will be passed as props to the hydrated component like this:
 
 ```svelte
 <MyComponent {data...}/>
