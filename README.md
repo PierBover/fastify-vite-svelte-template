@@ -14,7 +14,7 @@ This setup solves both using styles from the `.svelte` files and global SASS/SCS
 
 ## SSR
 
-The files in the `/ssr-pages` directory will only be rendered in the server. If you want client-side interactivity, add an interactive island. Islands will be first rendered in the server, and then hydrated in the client.
+The `.svelte` files in the `/ssr-pages` directory will be used for rendering HTML in the server. If you want client-side interactivity, add an interactive island to your page. Islands will be first rendered in the server, and then hydrated in the client.
 
 Check the `server.js` file to see how to render a Svelte module. In your Fastify code first import the `renderSsr()` function:
 
@@ -55,14 +55,14 @@ You can add data to an island using the optional `data` prop. As usual with hydr
 The data needs to be encapsulated into an object. The key/values of the object will be passed as props to the hydrated component like this:
 
 ```svelte
-<MyComponent {data...}/>
+<MyComponent {...data}/>
 ```
 
 If this doesn't work for your use case, the wrapper component `/src/components/Island.svelte` is simple enough that you can adapt it to fit your needs.
 
 ### Make an island client-side only
 
-You can configure an island to skip SSR and be only hydrated in the client.
+You can configure an island to skip SSR so that it is only hydrated in the client.
 
 ```svelte
 <Island component={MyComponent} clientOnly/>
@@ -71,6 +71,6 @@ You can configure an island to skip SSR and be only hydrated in the client.
 ### Limitations of islands
 
 * Islands components have to be located in the `/src/islands` directory.
-* Unfortunately you **cannot** create subdirectories in the `/src/islands` directory since all the island filenames have to unique for this to work.
+* Unfortunately you **cannot** create subdirectories in the `/src/islands` directory since all the island filenames have to be unique for this to work.
 * As usual with hydration, islands can only be hydrated with JSON-serializable data.
 * You can't use slots to add children to islands.
