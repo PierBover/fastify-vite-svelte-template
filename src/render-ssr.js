@@ -88,12 +88,12 @@ function addIslandEntryScripts (html) {
 
 	const regex = /data-component-name="([a-zA-Z\d]+)"/gm;
 
-	const islandsComponentNames = []
+	const islandsComponentNames = [];
 
 	let match;
 
 	while (match = regex.exec(html)) {
-		if(match) islandsComponentNames.push(match[1]);
+		if (match && islandsComponentNames.indexOf(match[1]) === -1) islandsComponentNames.push(match[1]);
 	}
 
 	// second:
