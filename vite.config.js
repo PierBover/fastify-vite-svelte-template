@@ -29,7 +29,13 @@ export default {
 		generateVirtualEntryPoints()
 	],
 	build: {
-		manifest: true
+		manifest: true,
+		minify: 'terser',
+		terserOptions: {
+			compress: {
+				drop_console: true
+			}
+		}
 	}
 }
 
