@@ -68,6 +68,11 @@ You can configure an island to skip SSR so that it is only hydrated in the clien
 <Island component={MyComponent} clientOnly/>
 ```
 
+### Communication between islands
+Simply import a single `.js` in the islands you want to connect. As an example, see how `islands/Menorca.svelte` and `islands/Formentera.svelte` use the `client/home.js` module to communicate via a reactive store.
+
+This communication can be as sophiticated as you need it either using Svelte mechanisms or even some global event bus. During dev, Vite will take care of importing the necessary modules to make everything work. In production mode, the modules will be imported via ESM.
+
 ### Limitations of islands
 
 * Islands components have to be located in the `/src/islands` directory.
