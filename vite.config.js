@@ -1,25 +1,21 @@
 import {svelte} from '@sveltejs/vite-plugin-svelte';
-import fs from 'fs';
-import path from 'path';
-import {fileURLToPath} from 'url';
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 import {globSync} from 'glob';
-
 
 // Vite config
 
 export default {
 	plugins: [
 		svelte({
-			//preprocess: [partialHydrationPreProcess],
 			compilerOptions: {
 				hydratable: true
 			}
 		}),
 		generateWrapper(),
-		generateHydrationScripts()
+		generateHydrationScripts(),
+		addScss()
 	],
 	build: {
+		cssCodeSplit: false,
 		manifest: true,
 		minify: 'terser',
 		terserOptions: {
@@ -27,27 +23,22 @@ export default {
 				drop_console: true
 			}
 		}
-	},
-	resolve: {
-		alias: {
-			'@pages': fileURLToPath(new URL('./src/pages', import.meta.url))
-		}
 	}
 }
 
-// plugin to generate the virtual hydration scripts
-// for the .svelte files in the src/pages directory
-// this is triggered by the fake URLs starting with hydration-script:
+// Plugin to generate the virtual hydration scripts
+// for the .svelte files in the src/pages directory.
+// During dev, is triggered by the fake URLs starting with hydration-script:
+// which are in the SSR'd HTML.
+// During build, we add Rollup entry points.
 
 function generateHydrationScripts () {
-
-	let config;
 
 	function generateScript (id) {
 
 		id = id.replace('hydration-script/', '').replace('.js', '.svelte');
 
-		const importPath = '/src/pages' + id;
+		const importPath = '/src/pages/' + id;
 
 		console.log(importPath);
 
@@ -68,14 +59,35 @@ function generateHydrationScripts () {
 
 	return {
 		name: 'generate-hydration-scripts',
+		configResolved(config) {
+
+			if (config.command === 'build') {
+				// find the .svelte components src/pages
+				const pageComponents = globSync('src/pages/**/*.svelte');
+
+				// for every .svelte page component return the path of a virtual entry point
+				config.build.rollupOptions.input = pageComponents.map((filePath) => {
+					const jsPath = filePath.replace('.svelte', '.js').replace('src/pages/', '');
+					console.log(jsPath);
+					return `hydration-script/${jsPath}`;
+				});
+			}
+		},
 		load (id) {
 			if (id.includes('hydration-script/')) return generateScript(id);
+		},
+		resolveId (id) {
+			// not sure why but we always need to return an id
+			// otherwise Rollup will look for hydration-script/ in the file system
+			//instead of using the virtual file
+			return id;
 		}
 	}
 }
 
-// plugin to generate a component wrapper so we can automate
-// creating the page data context
+// Plugin to generate component wrappers so we can automate
+// creating the page data context.
+// We add the ?no_wrap to prevent infinite import recursion
 
 function generateWrapper () {
 
@@ -102,6 +114,20 @@ function generateWrapper () {
 		load (id) {
 			if (id.includes('pages/') && !id.includes('?no_wrap')) {
 				return generatePageWrapper(id);
+			}
+		}
+	}
+}
+
+// For some reason Rollup ignores index.scss when adding it directly in the config...
+// but it works when adding it via a plugin ¯\_(ツ)_/¯
+
+function addScss () {
+	return {
+		name: 'add-scss',
+		configResolved(config) {
+			if (config.command === 'build') {
+				config.build.rollupOptions.input.push('src/client/index.scss');
 			}
 		}
 	}

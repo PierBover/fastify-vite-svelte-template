@@ -1,7 +1,7 @@
 import path from 'path';
 import Fastify from 'fastify';
 import {createServer as createViteServer} from 'vite';
-import {renderSsr} from './ssr/render-ssr.js';
+import {initSsr, renderSsr} from './ssr/render-ssr.js';
 import {fileURLToPath} from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -10,6 +10,8 @@ const DEV = process.env.DEV === 'true';
 const fastify = Fastify({
 	logger: true
 });
+
+// VITE and SSR stuff
 
 export let vite;
 
@@ -30,29 +32,33 @@ if (DEV) {
 	// PROD
 	// just serve the assets built by Vite
 	await fastify.register(import('@fastify/static'), {
-		root: path.join(__dirname, 'vite/client/assets'),
+		root: path.join(__dirname, '.vite/client/assets'),
 		prefix: '/assets/',
 	});
 }
 
+await initSsr();
+
+fastify.decorateReply('renderPage', async function (page, data = null) {
+	const html = await renderSsr(page, data);
+	this.header('content-type', 'text/html');
+	this.send(html);
+});
+
+// ROUTES
+
 fastify.get('/', async function (request, reply) {
-	const html = await renderSsr('Home', {
+	await reply.renderPage('Home', {
 		message: 'Hello world'
 	});
-	reply.header('content-type', 'text/html');
-	reply.send(html);
 });
 
 fastify.get('/about', async function (request, reply) {
-	const html = await renderSsr('deep/nested/About');
-	reply.header('content-type', 'text/html');
-	reply.send(html);
+	await reply.renderPage('deep/nested/About');
 });
 
 fastify.get('/another', async function (request, reply) {
-	const html = await renderSsr('Another');
-	reply.header('content-type', 'text/html');
-	reply.send(html);
+	await reply.renderPage('Another');
 });
 
 fastify.listen({ port: 3000 }, function (err, address) {
@@ -62,9 +68,12 @@ fastify.listen({ port: 3000 }, function (err, address) {
 	}
 });
 
+// SHUTDOWN
+
 async function closeGracefully () {
-	// close the Vite server
-	await vite.close();
+	// close the Vite server during DEV
+	if (vite) await vite.close();
+	await app.close();
 	// close db client and other stuff
 }
 

@@ -10,31 +10,43 @@ const templateProduction = fs.readFileSync(path.resolve(__dirname, './index.html
 const DEV = process.env.DEV === 'true';
 const PRODUCTION = !DEV;
 
-let manifest;
+let manifest = {}, renderSvelte;
 
-// in production get the json manifest produced by Vite
-// so we know the assets we need for every page
-if (PRODUCTION) manifest = JSON.parse(fs.readFileSync(path.resolve(__dirname, './vite/client/manifest.json')));
+export async function initSsr () {
+	// Get the Svelte SSR function
+	// in DEV we get it from the Vite magic
+	if (DEV) renderSvelte = (await vite.ssrLoadModule('/src/ssr/render-svelte.js')).renderSvelte;
+	// in PRODUCTION we get it from the Vite server build
+	if (PRODUCTION) renderSvelte = (await import('../.vite/server/render-svelte.js')).renderSvelte;
+
+	// In production get the json manifests produced by Vite
+	// so we know the assets we need for every page
+	if (PRODUCTION) {
+		manifest.client = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../.vite/client/manifest.json')));
+		manifest.server = JSON.parse(fs.readFileSync(path.resolve(__dirname, '../.vite/server/manifest.json')));
+	}
+}
 
 export async function renderSsr (sveltePageComponent, pageData) {
 	if (DEV) {
-		// inject vite dev features for HMR
+		// inject Vite dev features for HMR etc
 		let viteHtml = await vite.transformIndexHtml('/', templateDev);
 
-		// get the SSR rendering function
-		const {renderSvelte} = await vite.ssrLoadModule('/src/ssr/render-svelte.js');
-
-		// render Svelte SSR and inject it into the html
+		// render Svelte SSR and inject stuff into the HTML
 		let pageHtml = await renderSvelte(viteHtml, sveltePageComponent, pageData);
 		pageHtml = addHydrationData(pageHtml, pageData);
-		pageHtml = addHydrationScript(pageHtml, sveltePageComponent)
-
+		pageHtml = addHydrationScript(pageHtml, sveltePageComponent);
 		return pageHtml;
-	} else {
-		let template = getPageTemplateProd(filename);
-		const {renderSvelte} = await import('./vite/server/render-svelte.js');
-		const html = await renderSvelte(template, filename);
-		return addIslandEntryScripts(html);
+	}
+
+	if (PRODUCTION) {
+		// render Svelte SSR and inject stuff into the HTML
+		let pageHtml = await renderSvelte(templateProduction, sveltePageComponent, pageData);
+		pageHtml = addStyles(pageHtml, sveltePageComponent);
+		pageHtml = addHydrationData(pageHtml, pageData);
+		pageHtml = addHydrationScript(pageHtml, sveltePageComponent);
+		pageHtml = addPrefetchTags(pageHtml);
+		return pageHtml;
 	}
 }
 
@@ -44,121 +56,39 @@ function addHydrationData (html, data) {
 }
 
 function addHydrationScript (html, sveltePageComponent) {
+
+	const file = `hydration-script/${sveltePageComponent}.js`;
+	let script;
+
 	if (DEV) {
 		// during dev we need to point Vite to the virtual entry files
 		// using the fake hydration-script/ path
 		// the virtual entry script is generated in the Vite plugin in vite.config.js
-		const script = `<script type="module" src="hydration-script/${sveltePageComponent}.js"></script>`;
-		return html.replace('<!--HYDRATION-SCRIPT-->', script);
+		script = `<script type="module" src="${file}"></script>`;
 	}
+
+	if (PRODUCTION) {
+		// in production we need to get the hydration .js file from the manifest
+		script = `<script type="module" src="${manifest.client[file].file}"></script>`;
+	}
+
+	return html.replace('<!--HYDRATION-SCRIPT-->', script);
 }
 
+function addStyles (html, sveltePageComponent) {
+	const file = manifest.client['style.css'].file;
+	const tag = `<link rel="stylesheet" href="/${file}" />`;
+	return html.replace('<!--CSS-TAGS-->', tag);
+}
 
+function addPrefetchTags (html) {
+	const keys = Object.keys(manifest.client).filter((key) => key.endsWith('.js'));
+	const files = keys.map((key) => {
+		return manifest.client[key].file
+	});
+	const tags = files.map((file) => {
+		return `<link rel="prefetch" href="${file}"></link>`
+	}).join('');
 
-//function getPageTemplateProd (filename) {
-
-//	const cssFiles = getPageCssFilesFromManifest(filename);
-
-//	const cssTags = cssFiles.map((filePath) => `<link rel="stylesheet" href="/${filePath}" />`).join('');
-
-//	// the path of script file must be for the browser!
-//	return `
-//		<!DOCTYPE html>
-//		<html lang="en">
-//		<head>
-//			<!--SVELTE-HEAD-->
-//			${cssTags}
-//		</head>
-//		<body>
-//			<div id="svelte-app"><!--SVELTE-SSR--></div>
-//			<!--HYDRATION-ENTRY-POINT-->
-//		</body>
-//		</html>
-//	`;
-//}
-
-//function getAssets (filename) {
-//	const [assetKey] = Object.keys(manifest).filter((key) => key.includes(`${filename}.js`));
-//	const asset = manifest[assetKey];
-
-//	return {
-//		js: asset.file,
-//		css: asset.css
-//	}
-//}
-
-//function addHydrationScript (html) {
-
-//	// first:
-//	// get all the values of the data-component-name attribute in the page
-//	// to find the component names we will need to hydrate
-
-//	const regex = /data-component-name="([a-zA-Z\d]+)"/gm;
-
-//	const islandsComponentNames = [];
-
-//	let match;
-
-//	while (match = regex.exec(html)) {
-//		if (match && islandsComponentNames.indexOf(match[1]) === -1) islandsComponentNames.push(match[1]);
-//	}
-
-//	// second:
-//	// generate one entry script tags for every island in this page
-//	// and replace the placeholder <!--ISLANDS-CLIENT-ENTRY-POINTS-->
-
-//	if (DEV) {
-//		// during dev we need to point Vite to the virtual entry files
-//		// using the fake VIRTUAL_ENTRY/ path
-//		// the virtual entry script is generated in the Vite plugin in vite.config.js
-//		const islandScripTags = islandsComponentNames.map((name) => {
-//			return `<script type="module" src="VIRTUAL_ENTRY/${name}"></script>`
-//		}).join('');
-
-//		return html.replace('<!--ISLANDS-CLIENT-ENTRY-POINTS-->', islandScripTags);
-//	} else {
-//		// in production we need to point to the real .js files generated by Vite
-
-//		// for every island we've found in the HTML
-//		// get the assets
-
-//		const scriptTags = [];
-//		const styleTags = [];
-
-//		islandsComponentNames.forEach((componentName) => {
-//			const assets = getIslandAssetsFromManifest(componentName);
-
-//			if (assets.js) scriptTags.push(`<script async type="module" src="/${assets.js}"></script>`);
-
-//			if (assets.css) {
-//				const tags = assets.css.map((cssPath) => `<link rel="stylesheet" href="/${cssPath}" />`);
-//				styleTags.push(...tags);
-//			}
-//		});
-
-//		 html = html.replace('<!--ISLANDS-CLIENT-ENTRY-POINTS-->', scriptTags.join(''));
-//		 html = html.replace('<!--ISLANDS-CSS-->', styleTags.join(''));
-
-//		 return html;
-//	}
-//}
-
-//function getIslandAssetsFromManifest (islandComponentName) {
-//	const key = Object.keys(manifest).filter((key) => key === `VIRTUAL_ENTRY/${islandComponentName}`);
-//	const entry = manifest[key];
-
-//	const assets = {
-//		js: entry.file
-//	};
-
-//	if (entry.css) assets.css = entry.css;
-
-//	return assets;
-//}
-
-//function getPageCssFilesFromManifest (pageComponentPath) {
-//	const cssFiles = [manifest['src/index.scss'].file];
-//	const key = Object.keys(manifest).filter((key) => key === `src/ssr-pages/${pageComponentPath}.css`);
-//	if (key) cssFiles.push(manifest[key].file);
-//	return cssFiles;
-//}
+	return html.replace('<!--PREFETCH-TAGS-->', tags);
+}
