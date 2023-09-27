@@ -5,6 +5,4 @@
 
 {#if isClient}
 	<p>Hydrated at: {Date.now()}</p>
-{:else}
-	<p>Rendered on the server (SSR)</p>
 {/if}

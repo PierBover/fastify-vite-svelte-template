@@ -1,9 +1,9 @@
 {
 	"verbose": false,
 	"watch": ["src"],
-	"ignore": ["src/static"],
+	"ignore": ["src/static", "src/components", "src/client"],
 	"ext": "js",
-	"exec": "DEV=true node src/server.js",
+	"exec": "DEV=true node src/main.js",
 	"legacyWatch": false,
 	"delay": 250
 }

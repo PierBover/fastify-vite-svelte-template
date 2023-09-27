@@ -1,5 +1,4 @@
 node_modules
 .DS_Store
 dist
-src/pages/client-entries/*
-src/vite/*
+src/.page-wrappers

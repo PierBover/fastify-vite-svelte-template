@@ -1,10 +1,10 @@
 import path from 'path';
 import Fastify from 'fastify';
 import {createServer as createViteServer} from 'vite';
-import {renderSsr} from './render-ssr.js';
+import {renderSsr} from './ssr/render-ssr.js';
 import {fileURLToPath} from 'url';
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DEV = process.env.DEV === 'true';
 
 const fastify = Fastify({
@@ -36,13 +36,15 @@ if (DEV) {
 }
 
 fastify.get('/', async function (request, reply) {
-	const html = await renderSsr('Home');
+	const html = await renderSsr('Home', {
+		message: 'Hello world'
+	});
 	reply.header('content-type', 'text/html');
 	reply.send(html);
 });
 
 fastify.get('/about', async function (request, reply) {
-	const html = await renderSsr('nested/About');
+	const html = await renderSsr('deep/nested/About');
 	reply.header('content-type', 'text/html');
 	reply.send(html);
 });
@@ -59,3 +61,11 @@ fastify.listen({ port: 3000 }, function (err, address) {
 		process.exit(1)
 	}
 });
+
+async function closeGracefully () {
+	// close the Vite server
+	await vite.close();
+	// close db client and other stuff
+}
+
+process.once('SIGTERM', closeGracefully);
