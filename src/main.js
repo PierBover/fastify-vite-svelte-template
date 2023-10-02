@@ -53,7 +53,7 @@ fastify.get('/', async function (request, reply) {
 	});
 });
 
-fastify.get('/about', async function (request, reply) {
+fastify.get('/nested/url/about', async function (request, reply) {
 	await reply.renderPage('deep/nested/About');
 });
 

@@ -1,6 +1,6 @@
 <nav>
 	<a href="/">Home</a>
-	<a href="/about">About</a>
+	<a href="/nested/url/about">About</a>
 	<a href="/another">Another</a>
 </nav>
 

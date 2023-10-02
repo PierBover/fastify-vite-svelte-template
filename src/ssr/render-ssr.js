@@ -57,7 +57,7 @@ function addHydrationData (html, data) {
 
 function addHydrationScript (html, sveltePageComponent) {
 
-	const file = `hydration-script/${sveltePageComponent}.js`;
+	const file = `/hydration-script/${sveltePageComponent}.js`;
 	let script;
 
 	if (DEV) {
